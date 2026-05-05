@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "Comparador de Preços",
+    "slug": "comparador de precos",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/slogan.png",
+    "scheme": "comparador-de-precos",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/images/slogan.png"
+      }
+    },
+    "web": {
+      "favicon": "./assets/images/slogan.png"
+    },
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#FFFFFF",
+          "resizeMode": "contain",
+          "image": "./assets/images/slogan.png"
+        }
+      ]
+    ]
+  }
+}
