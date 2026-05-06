@@ -5,12 +5,12 @@ export default function TabsLayout() {
   return (
     <Tabs screenOptions={{
       headerShown: false,
-      tabBarActiveTintColor: '#FF6B35',
+      tabBarActiveTintColor: '#8400ff',
       tabBarInactiveTintColor: '#999',
       tabBarStyle: {
         backgroundColor: '#fff',
         borderTopWidth: 0.5,
-        borderTopColor: '#E0E0E0',
+        borderTopColor: '#e0e0e0',
         height: 60,
         paddingBottom: 8,
       },
@@ -30,6 +30,24 @@ export default function TabsLayout() {
           title: 'Buscar',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="search-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="favoritos"
+        options={{
+          title: 'Favoritos',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="heart-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="carrinho"
+        options={{
+          title: 'Carrinho',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="cart-outline" size={size} color={color} />
           ),
         }}
       />

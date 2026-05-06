@@ -170,7 +170,7 @@ export default function HomeScreen() {
                 <Ionicons
                   name={favoritos.includes(item.id) ? 'heart' : 'heart-outline'}
                   size={16}
-                  color="#FF6B35"
+                  color="#a927ff"
                 />
               </TouchableOpacity>
               <Text style={styles.produtoNome} numberOfLines={2}>{item.nome}</Text>
@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     gap: 8,
     borderWidth: 0.5,
-    borderColor: '#E0E0E0',
+    borderColor: '#8800f7',
   },
   searchInput: { flex: 1, fontSize: 14, color: '#333' },
   banner: {
@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
   },
   categoriaCirculoAtivo: {
     backgroundColor: '#FFF3EE',
-    borderColor: '#FF6B35',
+    borderColor: '#7f1cff',
     borderWidth: 1.5,
   },
   categoriaNome: { fontSize: 11, color: '#555', textAlign: 'center' },
@@ -277,7 +277,7 @@ const styles = StyleSheet.create({
     marginRight: 14,
     width: 155,
     borderWidth: 0.5,
-    borderColor: '#E8E8E8',
+    borderColor: '#931af7',
   },
   produtoImgPlaceholder: {
     width: '100%', height: 110,
@@ -292,12 +292,12 @@ const styles = StyleSheet.create({
     borderRadius: 20, padding: 5,
   },
   produtoNome: { fontSize: 13, fontWeight: '500', color: '#333', marginBottom: 4 },
-  produtoPreco: { fontSize: 14, fontWeight: '700', color: '#FF6B35', marginBottom: 8 },
+  produtoPreco: { fontSize: 14, fontWeight: '700', color: '#c000fa', marginBottom: 8 },
   verMelhorBtn: {
     backgroundColor: '#FFF3EE',
     borderRadius: 8,
     paddingVertical: 6,
     alignItems: 'center',
   },
-  verMelhorTxt: { fontSize: 11, color: '#FF6B35', fontWeight: '600' },
+  verMelhorTxt: { fontSize: 11, color: '#9b22ff', fontWeight: '600' },
 });

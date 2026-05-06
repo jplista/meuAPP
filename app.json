@@ -1,20 +1,25 @@
 {
   "expo": {
     "name": "Comparador de Preços",
-    "slug": "comparador de precos",
+    "slug": "comparador-de-precos",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/slogan.png",
     "scheme": "comparador-de-precos",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "y",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/slogan.png"
-      }
+      },
+      "package": "com.joao_pedro_lista.comparadordeprecos"
     },
     "web": {
       "favicon": "./assets/images/slogan.png"
@@ -28,6 +33,18 @@
           "image": "./assets/images/slogan.png"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "90391420-ae7e-4338-897f-c43ab0d637fc"
+      }
+    },
+    "owner": "joao_pedro_lista",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/90391420-ae7e-4338-897f-c43ab0d637fc"
+    }
   }
 }
