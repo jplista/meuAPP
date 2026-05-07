@@ -1,59 +1,55 @@
-// Importa componentes básicos do React Native
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
-// Importa ícones da biblioteca Expo
 import { Ionicons } from '@expo/vector-icons';
+import { useFavoritos } from '../../context/FavoritosContext';
+import { useRouter } from 'expo-router';
 
-// Lista mockada de favoritos (apenas para teste)
-const favoritosMock = [
-  { id: '1', nome: 'Fone Bluetooth', preco: 'R$ 120,00', emoji: '🎧' },
-  { id: '2', nome: 'Blusa Feminina', preco: 'R$ 89,00',  emoji: '👚' },
-];
-
-// Componente principal da tela de favoritos
 export default function FavoritosScreen() {
+  const { favoritos, toggleFavorito } = useFavoritos();
+  const router = useRouter();
+
   return (
     <View style={styles.container}>
 
-      {/* Cabeçalho da tela */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Meus Favoritos</Text>
         <Ionicons name="heart" size={22} color="#9410ff" />
       </View>
 
-      {/* Verifica se há favoritos */}
-      {favoritosMock.length === 0 ? (
-        // Caso não haja favoritos, mostra mensagem de vazio
+      {favoritos.length === 0 ? (
         <View style={styles.vazio}>
           <Text style={{ fontSize: 50 }}>🤍</Text>
           <Text style={styles.vazioTxt}>Nenhum favorito ainda</Text>
           <Text style={styles.vazioSub}>Adicione produtos que você gostou!</Text>
         </View>
       ) : (
-        // Caso haja favoritos, renderiza lista
         <FlatList
-          data={favoritosMock} // dados da lista
-          keyExtractor={(item) => item.id} // chave única
-          contentContainerStyle={{ padding: 20, gap: 12 }} // espaçamento interno
+          data={favoritos}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={{ padding: 20, gap: 12 }}
           renderItem={({ item }) => (
-            // Card de cada produto favorito
             <View style={styles.card}>
-              {/* Emoji do produto */}
               <View style={styles.cardEmoji}>
                 <Text style={{ fontSize: 36 }}>{item.emoji}</Text>
               </View>
 
-              {/* Informações do produto */}
               <View style={styles.cardInfo}>
                 <Text style={styles.cardNome}>{item.nome}</Text>
                 <Text style={styles.cardPreco}>{item.preco}</Text>
-                {/* Botão para ver melhor preço */}
-                <TouchableOpacity style={styles.cardBtn}>
+                <TouchableOpacity
+                  style={styles.cardBtn}
+                  onPress={() => router.push({
+                    pathname: '/produto/[id]',
+                    params: { id: item.id, nome: item.nome, preco: item.preco, emoji: item.emoji },
+                  })}
+                >
                   <Text style={styles.cardBtnTxt}>Ver melhor preço</Text>
                 </TouchableOpacity>
               </View>
 
-              {/* Botão para remover dos favoritos */}
-              <TouchableOpacity style={styles.removeBtn}>
+              <TouchableOpacity
+                style={styles.removeBtn}
+                onPress={() => toggleFavorito(item)}
+              >
                 <Ionicons name="heart" size={22} color="#9410ff" />
               </TouchableOpacity>
             </View>
@@ -64,11 +60,8 @@ export default function FavoritosScreen() {
   );
 }
 
-// Estilos da tela
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8F8F8' },
-
-  // Cabeçalho
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -81,13 +74,9 @@ const styles = StyleSheet.create({
     borderBottomColor: '#E0E0E0',
   },
   headerTitle: { fontSize: 20, fontWeight: '700', color: '#222' },
-
-  // Layout vazio
   vazio: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 8 },
   vazioTxt: { fontSize: 18, fontWeight: '600', color: '#333', marginTop: 10 },
   vazioSub: { fontSize: 14, color: '#999' },
-
-  // Card de produto
   card: {
     backgroundColor: '#fff',
     borderRadius: 14,
@@ -108,8 +97,6 @@ const styles = StyleSheet.create({
   cardInfo: { flex: 1, gap: 4 },
   cardNome: { fontSize: 14, fontWeight: '600', color: '#222' },
   cardPreco: { fontSize: 15, fontWeight: '700', color: '#9410ff' },
-
-  // Botão "Ver melhor preço"
   cardBtn: {
     backgroundColor: '#FFF3EE',
     borderRadius: 8,
@@ -119,7 +106,5 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   cardBtnTxt: { fontSize: 11, color: '#9410ff', fontWeight: '600' },
-
-  // Botão de remover
   removeBtn: { padding: 6 },
 });

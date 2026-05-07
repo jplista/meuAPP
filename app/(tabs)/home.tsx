@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useFavoritos } from '../../context/FavoritosContext';
 
 const categorias = [
   { id: '0', nome: 'Todos', emoji: '🔥' },
@@ -28,19 +29,13 @@ export default function HomeScreen() {
   const router = useRouter();
   const [busca, setBusca] = useState('');
   const [categoriaAtiva, setCategoriaAtiva] = useState('0');
-  const [favoritos, setFavoritos] = useState<string[]>([]);
+  const { toggleFavorito, isFavorito } = useFavoritos();
 
   const produtosFiltrados = todosProdutos.filter((p) => {
     const bateBusca = p.nome.toLowerCase().includes(busca.toLowerCase());
     const bateCategoria = categoriaAtiva === '0' || p.categoria === categoriaAtiva;
     return bateBusca && bateCategoria;
   });
-
-  const toggleFavorito = (id: string) => {
-    setFavoritos((prev) =>
-      prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id]
-    );
-  };
 
   const abrirProduto = (item: typeof todosProdutos[0]) => {
     router.push({
@@ -165,10 +160,15 @@ export default function HomeScreen() {
               </View>
               <TouchableOpacity
                 style={styles.favBtn}
-                onPress={() => toggleFavorito(item.id)}
+                onPress={() => toggleFavorito({
+                  id: item.id,
+                  nome: item.nome,
+                  preco: item.preco,
+                  emoji: item.emoji,
+                })}
               >
                 <Ionicons
-                  name={favoritos.includes(item.id) ? 'heart' : 'heart-outline'}
+                  name={isFavorito(item.id) ? 'heart' : 'heart-outline'}
                   size={16}
                   color="#a927ff"
                 />
