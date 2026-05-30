@@ -1,47 +1,235 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, ScrollView,
-  TextInput, TouchableOpacity, FlatList
+  TextInput, TouchableOpacity, FlatList,
+  Image, ActivityIndicator, Animated,
+  Dimensions
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useFavoritos } from '../../context/FavoritosContext';
+import { buscarProdutos, Produto } from '../../services/api';
+
+const { width } = Dimensions.get('window');
+const BANNER_WIDTH = width - 40;
 
 const categorias = [
-  { id: '0', nome: 'Todos', emoji: '🔥' },
-  { id: '1', nome: 'Calçados', emoji: '👟' },
-  { id: '2', nome: 'Beleza', emoji: '💄' },
-  { id: '3', nome: 'Moda Fem.', emoji: '👗' },
-  { id: '4', nome: 'Joias', emoji: '💍' },
-  { id: '5', nome: 'Moda Masc.', emoji: '👔' },
+  { id: '0', nome: 'Todos', emoji: '🔥', query: 'ofertas do dia' },
+  { id: '1', nome: 'Calçados', emoji: '👟', query: 'tênis' },
+  { id: '2', nome: 'Beleza', emoji: '💄', query: 'maquiagem' },
+  { id: '3', nome: 'Moda Fem.', emoji: '👗', query: 'vestido feminino' },
+  { id: '4', nome: 'Joias', emoji: '💍', query: 'joias prata' },
+  { id: '5', nome: 'Moda Masc.', emoji: '👔', query: 'camisa masculina' },
 ];
 
-const todosProdutos = [
-  { id: '1', nome: 'Fone Bluetooth', preco: 'R$ 120,00', categoria: '1', emoji: '🎧' },
-  { id: '2', nome: 'Blusa Feminina', preco: 'R$ 89,00',  categoria: '3', emoji: '👚' },
-  { id: '3', nome: 'Tênis Esportivo', preco: 'R$ 250,00', categoria: '1', emoji: '👟' },
-  { id: '4', nome: 'Relógio Smart', preco: 'R$ 399,00',  categoria: '5', emoji: '⌚' },
-  { id: '5', nome: 'Batom Matte', preco: 'R$ 45,00',    categoria: '2', emoji: '💄' },
-  { id: '6', nome: 'Anel Prata', preco: 'R$ 199,00',    categoria: '4', emoji: '💍' },
-];
+function BannerCarrossel({
+  produtos,
+  onPress,
+}: {
+  produtos: Produto[];
+  onPress: (item: Produto) => void;
+}) {
+  const [indice, setIndice] = useState(0);
+  const scrollRef = useRef<FlatList>(null);
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (produtos.length === 0) return;
+    const interval = setInterval(() => {
+      Animated.sequence([
+        Animated.timing(fadeAnim, { toValue: 0.7, duration: 300, useNativeDriver: true }),
+        Animated.timing(fadeAnim, { toValue: 1, duration: 300, useNativeDriver: true }),
+      ]).start();
+
+      setIndice((prev) => {
+        const proximo = (prev + 1) % produtos.length;
+        try {
+          scrollRef.current?.scrollToIndex({ index: proximo, animated: true });
+        } catch {}
+        return proximo;
+      });
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [produtos.length]);
+
+  if (produtos.length === 0) {
+    return (
+      <View style={bannerStyles.bannerPadrao}>
+        <View style={{ flex: 1 }}>
+          <Text style={bannerStyles.bannerSub}>Oferta Especial</Text>
+          <Text style={bannerStyles.bannerTitle}>Super Sale{'\n'}Desconto</Text>
+          <Text style={bannerStyles.bannerDesconto}>Até 50%</Text>
+          <View style={bannerStyles.bannerBtn}>
+            <Text style={bannerStyles.bannerBtnText}>Ver agora</Text>
+          </View>
+        </View>
+        <View style={bannerStyles.bannerImgPlaceholder}>
+          <Text style={{ fontSize: 48 }}>🛍️</Text>
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <View style={bannerStyles.container}>
+      <Animated.View style={{ opacity: fadeAnim }}>
+        <FlatList
+          ref={scrollRef}
+          data={produtos}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          keyExtractor={(item) => item.id}
+          getItemLayout={(_, index) => ({
+            length: BANNER_WIDTH + 12,
+            offset: (BANNER_WIDTH + 12) * index,
+            index,
+          })}
+          onMomentumScrollEnd={(e) => {
+            const novoIndice = Math.round(
+              e.nativeEvent.contentOffset.x / (BANNER_WIDTH + 12)
+            );
+            setIndice(novoIndice);
+          }}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={bannerStyles.card}
+              activeOpacity={0.9}
+              onPress={() => onPress(item)}
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={bannerStyles.bannerSub}>🔥 Oferta Especial</Text>
+                <Text style={bannerStyles.bannerTitle} numberOfLines={2}>
+                  {item.nome}
+                </Text>
+                <Text style={bannerStyles.bannerDesconto}>{item.preco}</Text>
+                <View style={bannerStyles.bannerBtn}>
+                  <Text style={bannerStyles.bannerBtnText}>Ver melhor preço →</Text>
+                </View>
+              </View>
+              {item.imagem ? (
+                <Image
+                  source={{ uri: item.imagem }}
+                  style={bannerStyles.bannerImg}
+                  resizeMode="contain"
+                />
+              ) : (
+                <View style={bannerStyles.bannerImgPlaceholder}>
+                  <Text style={{ fontSize: 40 }}>🛍️</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          )}
+        />
+      </Animated.View>
+
+      {/* Pontinhos indicadores */}
+      <View style={bannerStyles.dots}>
+        {produtos.map((_, i) => (
+          <View
+            key={i}
+            style={[bannerStyles.dot, i === indice && bannerStyles.dotAtivo]}
+          />
+        ))}
+      </View>
+    </View>
+  );
+}
+
+const bannerStyles = StyleSheet.create({
+  container: {
+    marginHorizontal: 20,
+    marginBottom: 20,
+  },
+  card: {
+    width: BANNER_WIDTH,
+    backgroundColor: '#FFF3EE',
+    borderRadius: 16,
+    padding: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  bannerPadrao: {
+    backgroundColor: '#FFF3EE',
+    marginHorizontal: 20,
+    borderRadius: 16,
+    padding: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  bannerSub: { fontSize: 12, color: '#a435ff', fontWeight: '500', marginBottom: 4 },
+  bannerTitle: { fontSize: 16, fontWeight: '700', color: '#222', lineHeight: 22, marginBottom: 4 },
+  bannerDesconto: { fontSize: 20, fontWeight: '800', color: '#a435ff', marginBottom: 12 },
+  bannerBtn: {
+    backgroundColor: '#a435ff',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    alignSelf: 'flex-start',
+  },
+  bannerBtnText: { color: '#fff', fontSize: 12, fontWeight: '600' },
+  bannerImg: { width: 90, height: 90, borderRadius: 12 },
+  bannerImgPlaceholder: {
+    width: 90, height: 90,
+    backgroundColor: '#FFE0D0',
+    borderRadius: 45,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dots: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 10,
+    gap: 6,
+  },
+  dot: {
+    width: 6, height: 6,
+    borderRadius: 3,
+    backgroundColor: '#ddd',
+  },
+  dotAtivo: {
+    backgroundColor: '#a435ff',
+    width: 18,
+  },
+});
 
 export default function HomeScreen() {
   const router = useRouter();
   const [busca, setBusca] = useState('');
   const [categoriaAtiva, setCategoriaAtiva] = useState('0');
+  const [produtos, setProdutos] = useState<Produto[]>([]);
+  const [carregando, setCarregando] = useState(true);
   const { toggleFavorito, isFavorito } = useFavoritos();
 
-  const produtosFiltrados = todosProdutos.filter((p) => {
-    const bateBusca = p.nome.toLowerCase().includes(busca.toLowerCase());
-    const bateCategoria = categoriaAtiva === '0' || p.categoria === categoriaAtiva;
-    return bateBusca && bateCategoria;
-  });
+  const carregarCategoria = useCallback(async (catId: string) => {
+    setCarregando(true);
+    const cat = categorias.find((c) => c.id === catId);
+    const resultado = await buscarProdutos(cat?.query ?? 'ofertas');
+    setProdutos(resultado.slice(0, 10));
+    setCarregando(false);
+  }, []);
 
-  const abrirProduto = (item: typeof todosProdutos[0]) => {
+  useEffect(() => {
+    carregarCategoria(categoriaAtiva);
+  }, [categoriaAtiva]);
+
+  const produtosFiltrados = produtos.filter((p) =>
+    p.nome.toLowerCase().includes(busca.toLowerCase())
+  );
+
+  const abrirProduto = (item: Produto) => {
     router.push({
       pathname: '/produto/[id]',
-      params: { id: item.id, nome: item.nome, preco: item.preco, emoji: item.emoji },
+      params: { id: item.id, nome: item.nome, preco: item.preco, imagem: item.imagem },
     });
+  };
+
+  const irParaBusca = () => {
+    if (busca.trim()) router.push('/(tabs)/busca');
   };
 
   return (
@@ -49,9 +237,11 @@ export default function HomeScreen() {
 
       {/* Header */}
       <View style={styles.header}>
-        <Ionicons name="menu" size={26} color="#333" />
-        <Text style={styles.headerTitle}>MelhorPreço</Text>
-        <Ionicons name="notifications-outline" size={26} color="#333" />
+      <TouchableOpacity onPress={() => router.push('/menu')}>
+      <Ionicons name="menu" size={26} color="#333" />
+      </TouchableOpacity>
+      <Text style={styles.headerTitle}>MelhorPreço</Text>
+      <Ionicons name="notifications-outline" size={26} color="#333" />
       </View>
 
       {/* Barra de busca */}
@@ -63,6 +253,8 @@ export default function HomeScreen() {
           style={styles.searchInput}
           value={busca}
           onChangeText={setBusca}
+          onSubmitEditing={irParaBusca}
+          returnKeyType="search"
         />
         {busca.length > 0 ? (
           <TouchableOpacity onPress={() => setBusca('')}>
@@ -73,24 +265,12 @@ export default function HomeScreen() {
         )}
       </View>
 
-      {/* Banner — some durante a busca */}
+      {/* Banner carrossel — some durante a busca */}
       {busca.length === 0 && (
-        <View style={styles.banner}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.bannerSub}>Oferta Especial</Text>
-            <Text style={styles.bannerTitle}>Super Sale{'\n'}Desconto</Text>
-            <Text style={styles.bannerDesconto}>Até 50%</Text>
-            <TouchableOpacity
-              style={styles.bannerBtn}
-              onPress={() => setCategoriaAtiva('0')}
-            >
-              <Text style={styles.bannerBtnText}>Ver agora</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.bannerImgPlaceholder}>
-            <Text style={{ fontSize: 48 }}>🛍️</Text>
-          </View>
-        </View>
+        <BannerCarrossel
+          produtos={produtos.slice(0, 5)}
+          onPress={abrirProduto}
+        />
       )}
 
       {/* Categorias */}
@@ -130,11 +310,18 @@ export default function HomeScreen() {
             ? 'Especial Para Você'
             : categorias.find((c) => c.id === categoriaAtiva)?.nome}
         </Text>
-        <Text style={styles.contador}>{produtosFiltrados.length} produtos</Text>
+        <Text style={styles.contador}>
+          {carregando ? '...' : `${produtosFiltrados.length} produtos`}
+        </Text>
       </View>
 
       {/* Lista de produtos */}
-      {produtosFiltrados.length === 0 ? (
+      {carregando ? (
+        <View style={styles.vazio}>
+          <ActivityIndicator size="large" color="#8800f7" />
+          <Text style={styles.vazioTexto}>Buscando produtos...</Text>
+        </View>
+      ) : produtosFiltrados.length === 0 ? (
         <View style={styles.vazio}>
           <Text style={{ fontSize: 40 }}>🔍</Text>
           <Text style={styles.vazioTexto}>Nenhum produto encontrado</Text>
@@ -155,16 +342,25 @@ export default function HomeScreen() {
               onPress={() => abrirProduto(item)}
               activeOpacity={0.8}
             >
-              <View style={styles.produtoImgPlaceholder}>
-                <Text style={{ fontSize: 42 }}>{item.emoji}</Text>
-              </View>
+              {item.imagem ? (
+                <Image
+                  source={{ uri: item.imagem }}
+                  style={styles.produtoImg}
+                  resizeMode="contain"
+                />
+              ) : (
+                <View style={styles.produtoImgPlaceholder}>
+                  <Text style={{ fontSize: 42 }}>📦</Text>
+                </View>
+              )}
+
               <TouchableOpacity
                 style={styles.favBtn}
                 onPress={() => toggleFavorito({
                   id: item.id,
                   nome: item.nome,
                   preco: item.preco,
-                  emoji: item.emoji,
+                  emoji: '📦',
                 })}
               >
                 <Ionicons
@@ -173,6 +369,7 @@ export default function HomeScreen() {
                   color="#a927ff"
                 />
               </TouchableOpacity>
+
               <Text style={styles.produtoNome} numberOfLines={2}>{item.nome}</Text>
               <Text style={styles.produtoPreco}>{item.preco}</Text>
               <View style={styles.verMelhorBtn}>
@@ -214,34 +411,6 @@ const styles = StyleSheet.create({
     borderColor: '#8800f7',
   },
   searchInput: { flex: 1, fontSize: 14, color: '#333' },
-  banner: {
-    backgroundColor: '#FFF3EE',
-    marginHorizontal: 20,
-    borderRadius: 16,
-    padding: 20,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  bannerSub: { fontSize: 12, color: '#FF6B35', fontWeight: '500', marginBottom: 4 },
-  bannerTitle: { fontSize: 20, fontWeight: '700', color: '#222', lineHeight: 26 },
-  bannerDesconto: { fontSize: 22, fontWeight: '800', color: '#FF6B35', marginTop: 2, marginBottom: 12 },
-  bannerBtn: {
-    backgroundColor: '#FF6B35',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    alignSelf: 'flex-start',
-  },
-  bannerBtnText: { color: '#fff', fontSize: 13, fontWeight: '600' },
-  bannerImgPlaceholder: {
-    width: 90, height: 90,
-    backgroundColor: '#FFE0D0',
-    borderRadius: 45,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   categoriasList: { paddingLeft: 20, marginBottom: 20 },
   categoriaItem: { alignItems: 'center', marginRight: 16 },
   categoriaCirculo: {
@@ -257,7 +426,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
   },
   categoriaNome: { fontSize: 11, color: '#555', textAlign: 'center' },
-  categoriaNomeAtivo: { color: '#FF6B35', fontWeight: '600' },
+  categoriaNomeAtivo: { color: '#ae35ff', fontWeight: '600' },
   secaoHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -269,7 +438,7 @@ const styles = StyleSheet.create({
   contador: { fontSize: 13, color: '#999' },
   vazio: { alignItems: 'center', paddingVertical: 40 },
   vazioTexto: { fontSize: 15, color: '#999', marginTop: 10 },
-  vazioLink: { fontSize: 14, color: '#FF6B35', marginTop: 8, fontWeight: '500' },
+  vazioLink: { fontSize: 14, color: '#9d35ff', marginTop: 8, fontWeight: '500' },
   produtoCard: {
     backgroundColor: '#fff',
     borderRadius: 14,
@@ -278,6 +447,11 @@ const styles = StyleSheet.create({
     width: 155,
     borderWidth: 0.5,
     borderColor: '#931af7',
+  },
+  produtoImg: {
+    width: '100%', height: 110,
+    borderRadius: 10,
+    marginBottom: 8,
   },
   produtoImgPlaceholder: {
     width: '100%', height: 110,

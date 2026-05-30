@@ -8,6 +8,12 @@ export default function RootLayout() {
         <Stack.Screen name="index" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="produto/[id]" />
+        <Stack.Screen
+          name="menu"
+          options={{
+            animation: 'slide_from_left',
+          }}
+        />
       </Stack>
     </FavoritosProvider>
   );

@@ -32,7 +32,9 @@
           "resizeMode": "contain",
           "image": "./assets/images/slogan.png"
         }
-      ]
+      ],
+      "expo-font",
+      "expo-router"
     ],
     "extra": {
       "eas": {
