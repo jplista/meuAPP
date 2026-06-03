@@ -23,7 +23,7 @@ export default function CarrinhoScreen() {
               <Text style={styles.limparTxt}>Limpar</Text>
             </TouchableOpacity>
           )}
-          <Ionicons name="cart" size={22} color="#FF6B35" />
+          <Ionicons name="cart" size={22} color="#8708ff" />
           {totalItens > 0 && (
             <View style={styles.badge}>
               <Text style={styles.badgeTxt}>{totalItens}</Text>
@@ -69,14 +69,14 @@ export default function CarrinhoScreen() {
                       style={styles.qtdBtn}
                       onPress={() => alterarQtd(item.id, -1)}
                     >
-                      <Ionicons name="remove" size={16} color="#FF6B35" />
+                      <Ionicons name="remove" size={16} color="#7c0aff" />
                     </TouchableOpacity>
                     <Text style={styles.qtdTxt}>{item.qtd}</Text>
                     <TouchableOpacity
                       style={styles.qtdBtn}
                       onPress={() => alterarQtd(item.id, 1)}
                     >
-                      <Ionicons name="add" size={16} color="#FF6B35" />
+                      <Ionicons name="add" size={16} color="#9e0cff" />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
   badge: {
     position: 'absolute',
     top: -6, right: -6,
-    backgroundColor: '#FF6B35',
+    backgroundColor: '#8904f5',
     borderRadius: 10,
     width: 18, height: 18,
     alignItems: 'center', justifyContent: 'center',
@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
   vazioSub: { fontSize: 14, color: '#999' },
   explorarBtn: {
     marginTop: 10,
-    backgroundColor: '#FF6B35',
+    backgroundColor: '#ae00ff',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 20,
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
   },
   qtdTxt: { fontSize: 15, fontWeight: '600', color: '#333', minWidth: 20, textAlign: 'center' },
   cardDireita: { alignItems: 'flex-end', gap: 8 },
-  subtotal: { fontSize: 14, fontWeight: '700', color: '#FF6B35' },
+  subtotal: { fontSize: 14, fontWeight: '700', color: '#a201ff' },
   removeBtn: { padding: 4 },
   footer: {
     backgroundColor: '#fff',
@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
   footerLabel: { fontSize: 15, color: '#666' },
   footerTotal: { fontSize: 22, fontWeight: '800', color: '#222' },
   finalizarBtn: {
-    backgroundColor: '#FF6B35',
+    backgroundColor: '#af01ff',
     borderRadius: 14,
     paddingVertical: 14,
     flexDirection: 'row',
