@@ -6,12 +6,14 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { compararPrecos, Oferta } from '../../services/api';
+import { useCarrinho } from '../../context/CarrinhoContext';
 
 export default function ProdutoScreen() {
   const { id, nome, preco, imagem, emoji } = useLocalSearchParams();
   const router = useRouter();
   const [ofertas, setOfertas] = useState<Oferta[]>([]);
   const [carregando, setCarregando] = useState(true);
+  const { adicionarAoCarrinho, estaNoCarrinho } = useCarrinho();
 
   useEffect(() => {
     async function carregar() {
@@ -47,6 +49,27 @@ export default function ProdutoScreen() {
           <Ionicons name="trending-down" size={14} color="#8800f7" />
           <Text style={styles.badgeTxt}>  Comparando preços em tempo real</Text>
         </View>
+
+        <TouchableOpacity
+          style={[styles.carrinhoBtn, estaNoCarrinho(String(id)) && styles.carrinhoBtnAtivo]}
+          onPress={() => adicionarAoCarrinho({
+            id: String(id),
+            nome: String(nome),
+            preco: String(preco),
+            precoNumerico: ofertas[0]?.precoNumerico ?? 0,
+            imagem: String(imagem ?? ''),
+            emoji: String(emoji ?? '📦'),
+          })}
+        >
+          <Ionicons
+            name={estaNoCarrinho(String(id)) ? 'cart' : 'cart-outline'}
+            size={18}
+            color="#fff"
+          />
+          <Text style={styles.carrinhoBtnTxt}>
+            {estaNoCarrinho(String(id)) ? 'Adicionado ✓' : 'Adicionar ao carrinho'}
+          </Text>
+        </TouchableOpacity>
 
         <Text style={styles.secao}>Melhores preços encontrados:</Text>
 
@@ -146,4 +169,18 @@ const styles = StyleSheet.create({
   },
   lojaBtnDestaque: { backgroundColor: '#8800f7' },
   lojaBtnTxt: { color: '#fff', fontSize: 13, fontWeight: '600' },
+  carrinhoBtn: {
+    backgroundColor: '#8c02fd',
+    borderRadius: 14,
+    paddingVertical: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 16,
+  },
+  carrinhoBtnAtivo: {
+    backgroundColor: '#4CAF50',
+  },
+  carrinhoBtnTxt: { color: '#fff', fontSize: 15, fontWeight: '700' },
 });

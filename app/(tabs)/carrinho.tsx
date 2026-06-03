@@ -1,113 +1,112 @@
-// Importa componentes básicos do React Native
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
-// Hook useState para gerenciar estado
-import { useState } from 'react';
-// Ícones da biblioteca Expo
 import { Ionicons } from '@expo/vector-icons';
+import { useCarrinho } from '../../context/CarrinhoContext';
+import { useRouter } from 'expo-router';
+import { Image } from 'react-native';
 
-// Lista mockada de itens do carrinho
-const carrinhoMock = [
-  { id: '1', nome: 'Fone Bluetooth', preco: 120.00, emoji: '🎧', qtd: 1 },
-  { id: '3', nome: 'Tênis Esportivo', preco: 250.00, emoji: '👟', qtd: 1 },
-];
+function formatarPreco(valor: number): string {
+  return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
 
 export default function CarrinhoScreen() {
-  // Estado que guarda os itens do carrinho
-  const [itens, setItens] = useState(carrinhoMock);
-
-  // Função para alterar quantidade (+ ou -)
-  const alterar = (id: string, delta: number) => {
-    setItens((prev) =>
-      prev
-        // Se o id bater, altera a quantidade
-        .map((item) => item.id === id ? { ...item, qtd: item.qtd + delta } : item)
-        // Remove itens com quantidade <= 0
-        .filter((item) => item.qtd > 0)
-    );
-  };
-
-  // Calcula o total do carrinho
-  const total = itens.reduce((acc, item) => acc + item.preco * item.qtd, 0);
+  const { itens, alterarQtd, removerDoCarrinho, limparCarrinho, totalPreco, totalItens } = useCarrinho();
+  const router = useRouter();
 
   return (
     <View style={styles.container}>
 
-      {/* Cabeçalho da tela */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Meu Carrinho</Text>
-        <Ionicons name="cart" size={22} color="#FF6B35" />
+        <View style={styles.headerRight}>
+          {itens.length > 0 && (
+            <TouchableOpacity onPress={limparCarrinho} style={styles.limparBtn}>
+              <Text style={styles.limparTxt}>Limpar</Text>
+            </TouchableOpacity>
+          )}
+          <Ionicons name="cart" size={22} color="#FF6B35" />
+          {totalItens > 0 && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeTxt}>{totalItens}</Text>
+            </View>
+          )}
+        </View>
       </View>
 
-      {/* Se carrinho estiver vazio */}
       {itens.length === 0 ? (
         <View style={styles.vazio}>
-          <Text style={{ fontSize: 50 }}>🛒</Text>
+          <Text style={{ fontSize: 60 }}>🛒</Text>
           <Text style={styles.vazioTxt}>Carrinho vazio</Text>
           <Text style={styles.vazioSub}>Adicione produtos para comparar!</Text>
+          <TouchableOpacity
+            style={styles.explorarBtn}
+            onPress={() => router.push('/(tabs)/busca')}
+          >
+            <Text style={styles.explorarTxt}>Explorar produtos</Text>
+          </TouchableOpacity>
         </View>
       ) : (
         <>
-          {/* Lista de itens do carrinho */}
           <FlatList
             data={itens}
             keyExtractor={(item) => item.id}
-            contentContainerStyle={{ padding: 20, gap: 12 }}
+            contentContainerStyle={{ padding: 16, gap: 12 }}
             renderItem={({ item }) => (
               <View style={styles.card}>
-                {/* Emoji do produto */}
-                <View style={styles.cardEmoji}>
-                  <Text style={{ fontSize: 36 }}>{item.emoji}</Text>
-                </View>
+                {item.imagem ? (
+                  <Image source={{ uri: item.imagem }} style={styles.cardImg} resizeMode="contain" />
+                ) : (
+                  <View style={styles.cardImgPlaceholder}>
+                    <Text style={{ fontSize: 30 }}>{item.emoji || '📦'}</Text>
+                  </View>
+                )}
 
-                {/* Informações do produto */}
                 <View style={styles.cardInfo}>
-                  <Text style={styles.cardNome}>{item.nome}</Text>
-                  <Text style={styles.cardPreco}>
-                    R$ {item.preco.toFixed(2).replace('.', ',')}
-                  </Text>
+                  <Text style={styles.cardNome} numberOfLines={2}>{item.nome}</Text>
+                  <Text style={styles.cardPreco}>{item.preco}</Text>
 
-                  {/* Controle de quantidade */}
                   <View style={styles.qtdRow}>
-                    {/* Botão diminuir */}
                     <TouchableOpacity
                       style={styles.qtdBtn}
-                      onPress={() => alterar(item.id, -1)}
+                      onPress={() => alterarQtd(item.id, -1)}
                     >
-                      <Ionicons name="remove" size={16} color="#9d35ff" />
+                      <Ionicons name="remove" size={16} color="#FF6B35" />
                     </TouchableOpacity>
-
-                    {/* Quantidade atual */}
                     <Text style={styles.qtdTxt}>{item.qtd}</Text>
-
-                    {/* Botão aumentar */}
                     <TouchableOpacity
                       style={styles.qtdBtn}
-                      onPress={() => alterar(item.id, 1)}
+                      onPress={() => alterarQtd(item.id, 1)}
                     >
-                      <Ionicons name="add" size={16} color="#9d35ff" />
+                      <Ionicons name="add" size={16} color="#FF6B35" />
                     </TouchableOpacity>
                   </View>
                 </View>
 
-                {/* Botão remover item (remove toda a qtd) */}
-                <TouchableOpacity onPress={() => alterar(item.id, -item.qtd)}>
-                  <Ionicons name="trash-outline" size={20} color="#ccc" />
-                </TouchableOpacity>
+                <View style={styles.cardDireita}>
+                  <Text style={styles.subtotal}>
+                    {formatarPreco(item.precoNumerico * item.qtd)}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => removerDoCarrinho(item.id)}
+                    style={styles.removeBtn}
+                  >
+                    <Ionicons name="trash-outline" size={18} color="#ccc" />
+                  </TouchableOpacity>
+                </View>
               </View>
             )}
           />
 
-          {/* Rodapé com total */}
           <View style={styles.footer}>
             <View style={styles.footerRow}>
-              <Text style={styles.footerLabel}>Total estimado</Text>
-              <Text style={styles.footerTotal}>
-                R$ {total.toFixed(2).replace('.', ',')}
+              <Text style={styles.footerLabel}>
+                {totalItens} {totalItens === 1 ? 'item' : 'itens'}
               </Text>
+              <Text style={styles.footerTotal}>{formatarPreco(totalPreco)}</Text>
             </View>
-
-            {/* Botão de finalizar */}
-            <TouchableOpacity style={styles.finalizarBtn}>
+            <TouchableOpacity
+              style={styles.finalizarBtn}
+              onPress={() => router.push('/(tabs)/busca')}
+            >
               <Text style={styles.finalizarTxt}>Ver melhores preços</Text>
               <Ionicons name="arrow-forward" size={16} color="#fff" />
             </TouchableOpacity>
@@ -118,11 +117,8 @@ export default function CarrinhoScreen() {
   );
 }
 
-// Estilos da tela
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8F8F8' },
-
-  // Cabeçalho
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -135,46 +131,66 @@ const styles = StyleSheet.create({
     borderBottomColor: '#E0E0E0',
   },
   headerTitle: { fontSize: 20, fontWeight: '700', color: '#222' },
-
-  // Layout vazio
-  vazio: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 8 },
-  vazioTxt: { fontSize: 18, fontWeight: '600', color: '#333', marginTop: 10 },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  limparBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#c200e9',
+  },
+  limparTxt: { fontSize: 12, color: '#b300fa', fontWeight: '500' },
+  badge: {
+    position: 'absolute',
+    top: -6, right: -6,
+    backgroundColor: '#FF6B35',
+    borderRadius: 10,
+    width: 18, height: 18,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  badgeTxt: { color: '#fff', fontSize: 10, fontWeight: '700' },
+  vazio: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10 },
+  vazioTxt: { fontSize: 20, fontWeight: '600', color: '#333', marginTop: 10 },
   vazioSub: { fontSize: 14, color: '#999' },
-
-  // Card de produto
+  explorarBtn: {
+    marginTop: 10,
+    backgroundColor: '#FF6B35',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 20,
+  },
+  explorarTxt: { color: '#fff', fontWeight: '600', fontSize: 14 },
   card: {
     backgroundColor: '#fff',
     borderRadius: 14,
-    padding: 14,
+    padding: 12,
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 0.5,
     borderColor: '#E8E8E8',
     gap: 12,
   },
-  cardEmoji: {
-    width: 70, height: 70,
+  cardImg: { width: 75, height: 75, borderRadius: 10 },
+  cardImgPlaceholder: {
+    width: 75, height: 75,
     backgroundColor: '#F5F5F5',
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderRadius: 10,
+    alignItems: 'center', justifyContent: 'center',
   },
   cardInfo: { flex: 1, gap: 4 },
-  cardNome: { fontSize: 14, fontWeight: '600', color: '#222' },
-  cardPreco: { fontSize: 15, fontWeight: '700', color: '#FF6B35' },
-
-  // Controle de quantidade
+  cardNome: { fontSize: 13, fontWeight: '600', color: '#222' },
+  cardPreco: { fontSize: 13, color: '#999' },
   qtdRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 4 },
   qtdBtn: {
     width: 28, height: 28,
     backgroundColor: '#FFF3EE',
     borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: 'center', justifyContent: 'center',
   },
-  qtdTxt: { fontSize: 15, fontWeight: '600', color: '#333' },
-
-  // Rodapé
+  qtdTxt: { fontSize: 15, fontWeight: '600', color: '#333', minWidth: 20, textAlign: 'center' },
+  cardDireita: { alignItems: 'flex-end', gap: 8 },
+  subtotal: { fontSize: 14, fontWeight: '700', color: '#FF6B35' },
+  removeBtn: { padding: 4 },
   footer: {
     backgroundColor: '#fff',
     padding: 20,
@@ -182,17 +198,11 @@ const styles = StyleSheet.create({
     borderTopColor: '#E0E0E0',
     gap: 14,
   },
-  footerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
+  footerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   footerLabel: { fontSize: 15, color: '#666' },
-  footerTotal: { fontSize: 20, fontWeight: '800', color: '#222' },
-
-  // Botão finalizar
+  footerTotal: { fontSize: 22, fontWeight: '800', color: '#222' },
   finalizarBtn: {
-    backgroundColor: '#af0bfc',
+    backgroundColor: '#FF6B35',
     borderRadius: 14,
     paddingVertical: 14,
     flexDirection: 'row',

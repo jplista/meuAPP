@@ -8,6 +8,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useFavoritos } from '../../context/FavoritosContext';
+import { useCarrinho } from '../../context/CarrinhoContext';
 import { buscarProdutos, Produto } from '../../services/api';
 
 const { width } = Dimensions.get('window');
@@ -204,6 +205,7 @@ export default function HomeScreen() {
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [carregando, setCarregando] = useState(true);
   const { toggleFavorito, isFavorito } = useFavoritos();
+  const { adicionarAoCarrinho, estaNoCarrinho } = useCarrinho();
 
   const carregarCategoria = useCallback(async (catId: string) => {
     setCarregando(true);
@@ -372,9 +374,30 @@ export default function HomeScreen() {
 
               <Text style={styles.produtoNome} numberOfLines={2}>{item.nome}</Text>
               <Text style={styles.produtoPreco}>{item.preco}</Text>
-              <View style={styles.verMelhorBtn}>
-                <Text style={styles.verMelhorTxt}>Ver melhor preço</Text>
-              </View>
+              <TouchableOpacity
+                style={[
+                  styles.verMelhorBtn,
+                  estaNoCarrinho(item.id) && { backgroundColor: '#e8f5e9' }
+                ]}
+                onPress={() => estaNoCarrinho(item.id)
+                  ? router.push('/(tabs)/carrinho')
+                  : adicionarAoCarrinho({
+                      id: item.id,
+                      nome: item.nome,
+                      preco: item.preco,
+                      precoNumerico: item.precoNumerico,
+                      imagem: item.imagem,
+                      emoji: '📦',
+                    })
+                }
+              >
+                <Text style={[
+                  styles.verMelhorTxt,
+                  estaNoCarrinho(item.id) && { color: '#4CAF50' }
+                ]}>
+                  {estaNoCarrinho(item.id) ? '✓ No carrinho' : 'Ver melhor preço'}
+                </Text>
+              </TouchableOpacity>
             </TouchableOpacity>
           )}
         />
